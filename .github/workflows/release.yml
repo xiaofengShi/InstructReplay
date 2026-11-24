@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -31,10 +33,15 @@ jobs:
           archive="instructreplay-${GITHUB_REF_NAME}.zip"
           python tools/package.py --output "$archive"
           sha256sum "$archive" > "$archive.sha256"
+          test "$(git cat-file -t "refs/tags/$GITHUB_REF_NAME")" = tag
+          git for-each-ref --format='%(contents)' "refs/tags/$GITHUB_REF_NAME" > release-notes.md
+          test -s release-notes.md
       - uses: actions/upload-artifact@v4
         with:
           name: source-release
-          path: instructreplay-v*.zip*
+          path: |
+            instructreplay-v*.zip*
+            release-notes.md
           if-no-files-found: error
 
   publish:
@@ -53,5 +60,5 @@ jobs:
           archive="instructreplay-${GITHUB_REF_NAME}.zip"
           sha256sum --check "$archive.sha256"
           gh release create "$GITHUB_REF_NAME" "$archive" "$archive.sha256" \
-            --repo "$GITHUB_REPOSITORY" --verify-tag --notes-from-tag \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --notes-file release-notes.md \
             --title "InstructReplay $GITHUB_REF_NAME"
