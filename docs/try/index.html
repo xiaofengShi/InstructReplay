@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Try the InstructReplay evaluation metrics in your browser. Change five benchmark scores and domain confirmation counts, then export inputs for the Python CLI.">
+<link rel="canonical" href="https://xiaofengshi.github.io/InstructReplay/try/">
+<title>Metrics playground · InstructReplay</title>
+<style>
+:root {color-scheme:light;--paper:#f7f5ef;--white:#fffdf8;--ink:#182c2c;--muted:#46605c;--forest:#124c43;--mint:#bdeecf;--line:#bdcec1;--night:#142829}
+*,*::before,*::after {box-sizing:border-box}
+body {margin:0;background:var(--paper);color:var(--ink);font:1rem/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap {width:min(100% - 2rem,68rem);margin-inline:auto}
+nav {display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.8rem 0}
+header,footer {background:var(--night);color:#eff5ec}
+header a,footer a {color:var(--mint)}
+nav a {display:inline-flex;align-items:center;min-height:44px}
+a {color:var(--forest);text-underline-offset:.2em}
+a:hover {text-decoration-thickness:.13em}
+:focus-visible {outline:3px solid #a45c20;outline-offset:3px}
+header :focus-visible,footer :focus-visible {outline-color:var(--mint)}
+h1 {font:400 clamp(2.7rem,6.4vw,5rem)/1.07 Georgia,serif;letter-spacing:-.045em;margin:.2rem 0 .85rem}
+h2 {margin:0 0 .5rem;font-size:1.2rem}
+p {margin:.4rem 0}
+main {padding:clamp(2.2rem,5vw,4rem) 0 3rem}
+.intro {max-width:63ch;color:var(--muted)}
+.grid {display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr);gap:1rem;align-items:start;margin-top:1.6rem}
+.panel {min-width:0;background:var(--white);border:1px solid var(--line);padding:clamp(.85rem,3vw,1.55rem);border-radius:.65rem}
+fieldset {border:0;padding:0;min-width:0;margin:0 0 1.3rem}
+legend {font-weight:720;font-size:1.12rem;margin-bottom:.65rem;padding:0}
+label {font-size:.85rem;font-weight:650}
+.counts {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
+.counts label {display:block}
+input {margin:.26rem 0 0;min-width:0;width:100%;min-height:44px;padding:.45rem .5rem;border:1px solid #698577;border-radius:.35rem;background:white;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}
+table {width:100%;border-collapse:collapse;text-align:left}
+th,td {padding:.32rem .25rem;border-bottom:1px solid var(--line);font-size:.86rem}
+th:first-child,td:first-child {padding-left:0}
+tbody th {font-weight:650}
+td {width:30%}
+.actions {display:flex;gap:.55rem;flex-wrap:wrap}
+button {min-height:44px;padding:.55rem .8rem;color:var(--forest);background:var(--white);border:1px solid var(--forest);font:700 .88rem/1.35 system-ui,sans-serif;border-radius:.4rem;cursor:pointer}
+button[type="submit"] {background:var(--forest);color:white}
+button:disabled {opacity:.55;cursor:default}
+#status {min-height:2.8em;margin-top:.75rem;font-size:.89rem;color:var(--muted)}
+dl {margin:.85rem 0 1.2rem;display:grid;gap:.55rem}
+dl>div {display:grid;grid-template-columns:1fr auto;align-items:center;gap:.5rem;border-bottom:1px solid var(--line);padding:.55rem 0}
+dt {font-weight:650}
+dd {margin:0;font:700 1.3rem/1.15 ui-monospace,monospace;color:var(--forest)}
+[data-current="false"] dd {color:var(--muted)}
+.fine {font-size:.89rem;color:var(--muted)}
+footer {padding:1.25rem 0}
+@media(max-width:53rem) {.grid {grid-template-columns:minmax(0,1fr)}}
+@media(max-width:25rem) {.counts {grid-template-columns:1fr}.wrap {width:calc(100% - 1.4rem)}}
+</style>
+<script type="module" src="playground.mjs"></script>
+</head>
+<body>
+<header><nav class="wrap" aria-label="Project navigation"><a href="../">← InstructReplay</a><a href="https://github.com/xiaofengShi/InstructReplay">GitHub ↗</a></nav></header>
+<main class="wrap">
+  <h1>Metrics playground</h1>
+  <p class="intro">Change the synthetic scores to see how the same gains and losses affect acquisition, forgetting, and the combined score. The calculation uses scores you have already collected. Inputs stay in your browser.</p>
+  <div class="grid">
+    <div class="panel">
+      <p id="playground-intro">The interactive calculator requires JavaScript. The synthetic example below can also be run with the Python CLI.</p>
+      <form id="scores" hidden>
+        <fieldset>
+          <legend>Domain confirmation</legend>
+          <div class="counts">
+            <label>Total questions<input type="number" name="questions" value="512" min="1" step="1" required></label>
+            <label>Initial confirmed<input type="number" name="confirmed-initial" value="100" min="0" step="1" required></label>
+            <label>Adapted confirmed<input type="number" name="confirmed-adapted" value="164" min="0" step="1" required></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>General benchmark scores (%)</legend>
+          <table>
+            <thead><tr><th scope="col">Benchmark</th><th scope="col">Initial</th><th scope="col">Adapted</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">IFEval</th><td><input aria-label="Initial IFEval" name="initial-IFEval" type="number" value="70" min="0" max="100" step="any" required></td><td><input aria-label="Adapted IFEval" name="adapted-IFEval" type="number" value="65" min="0" max="100" step="any" required></td></tr>
+              <tr><th scope="row">MMLU</th><td><input aria-label="Initial MMLU" name="initial-MMLU" type="number" value="60" min="0" max="100" step="any" required></td><td><input aria-label="Adapted MMLU" name="adapted-MMLU" type="number" value="61" min="0" max="100" step="any" required></td></tr>
+              <tr><th scope="row">MATH-500</th><td><input aria-label="Initial MATH-500" name="initial-MATH-500" type="number" value="50" min="0" max="100" step="any" required></td><td><input aria-label="Adapted MATH-500" name="adapted-MATH-500" type="number" value="50" min="0" max="100" step="any" required></td></tr>
+              <tr><th scope="row">BBH</th><td><input aria-label="Initial BBH" name="initial-BBH" type="number" value="40" min="0" max="100" step="any" required></td><td><input aria-label="Adapted BBH" name="adapted-BBH" type="number" value="35" min="0" max="100" step="any" required></td></tr>
+              <tr><th scope="row">HumanEval+</th><td><input aria-label="Initial HumanEval+" name="initial-HumanEval+" type="number" value="30" min="0" max="100" step="any" required></td><td><input aria-label="Adapted HumanEval+" name="adapted-HumanEval+" type="number" value="25" min="0" max="100" step="any" required></td></tr>
+            </tbody>
+          </table>
+        </fieldset>
+        <div class="actions">
+          <button type="submit">Calculate</button>
+          <button type="button" id="reset-scores">Restore example</button>
+          <button type="button" id="export-scores" disabled>Export inputs as JSON</button>
+        </div>
+        <p id="status" role="status"></p>
+      </form>
+    </div>
+    <aside class="panel" aria-labelledby="output-label">
+      <h2 id="output-label">Scores in percentage points</h2>
+      <dl id="metrics-output" data-current="true" aria-live="polite">
+        <div><dt>Acquisition (A)</dt><dd id="metric-A">12.5</dd></div>
+        <div><dt>Mean forgetting (F)</dt><dd id="metric-F">3</dd></div>
+        <div><dt>Largest drop (W)</dt><dd id="metric-W">5</dd></div>
+        <div><dt>Acquisition − forgetting (S)</dt><dd id="metric-S">9.5</dd></div>
+      </dl>
+      <p class="fine">F averages the five nonnegative benchmark drops. Benchmark improvements cannot cancel declines in F.</p>
+      <p class="fine"><a href="example.json" download>Download the synthetic example</a> · <a href="https://github.com/xiaofengShi/InstructReplay#run-the-metrics-example">Run the Python CLI ↗</a></p>
+    </aside>
+  </div>
+</main>
+<footer><div class="wrap"><a href="../#results">Study results</a> · <a href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/evaluation.md">Scoring protocol</a></div></footer>
+</body>
+</html>

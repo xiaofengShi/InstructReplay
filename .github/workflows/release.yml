@@ -1,0 +1,57 @@
+name: Publish source release
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate tag and build the source archive
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import tomllib
+          from pathlib import Path
+
+          tag = os.environ["GITHUB_REF_NAME"]
+          version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          if not re.fullmatch(r"v\d+\.\d+\.\d+", tag) or tag != f"v{version}":
+              raise SystemExit(f"tag {tag!r} must match package version {version!r}")
+          PY
+          archive="instructreplay-${GITHUB_REF_NAME}.zip"
+          python tools/package.py --output "$archive"
+          sha256sum "$archive" > "$archive.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-release
+          path: instructreplay-v*.zip*
+          if-no-files-found: error
+
+  publish:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-release
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive="instructreplay-${GITHUB_REF_NAME}.zip"
+          sha256sum --check "$archive.sha256"
+          gh release create "$GITHUB_REF_NAME" "$archive" "$archive.sha256" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --notes-from-tag \
+            --title "InstructReplay $GITHUB_REF_NAME"

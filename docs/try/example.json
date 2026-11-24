@@ -1,0 +1,7 @@
+{
+  "initial": {"IFEval": 70, "MMLU": 60, "MATH-500": 50, "BBH": 40, "HumanEval+": 30},
+  "adapted": {"IFEval": 65, "MMLU": 61, "MATH-500": 50, "BBH": 35, "HumanEval+": 25},
+  "confirmed_initial": 100,
+  "confirmed_adapted": 164,
+  "questions": 512
+}

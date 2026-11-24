@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="InstructReplay preserves general assistant behavior during factual fine-tuning. Explore the research results, training recipe, and open source implementation.">
+<meta name="description" content="Keep general assistant behavior during factual fine-tuning. Compare six InstructReplay experiments, try the evaluation math, and get a versioned Python implementation.">
 <meta name="theme-color" content="#142829">
 <link rel="canonical" href="https://xiaofengshi.github.io/InstructReplay/">
 <meta property="og:type" content="website">
@@ -144,7 +144,17 @@
     .table-scroll {overflow:visible}
     table {break-inside:avoid}
   }
+  .result-head {flex-wrap:wrap}
+  .filter {display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;font-size:.88rem}
+  .filter[hidden] {display:none}
+  .filter select {font:inherit;color:var(--forest);background:var(--white);border:1px solid #698577;border-radius:.35rem;min-height:44px;padding:.28rem .6rem}
+  .filter output {min-width:8.5ch;color:var(--muted)}
+  .card .actions {margin-top:1rem}
+  .entry-list {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+  .entry-list .card h3 {margin-top:.1rem}
+  @media (max-width:48rem) {.entry-list{grid-template-columns:minmax(0,1fr)}}
 </style>
+<script type="module" src="assets/home.mjs"></script>
 </head>
 <body id="top">
 <a class="skip" href="#main">Skip to content</a>
@@ -152,9 +162,9 @@
   <div class="wrap">
     <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">↻</span> InstructReplay</a>
     <nav aria-label="Project navigation">
-      <a href="#method">Method</a>
       <a href="#results">Results</a>
-      <a href="#reproduce">Reproduce</a>
+      <a href="try/">Try it</a>
+      <a href="#reproduce">Train</a>
       <a href="https://github.com/xiaofengShi/InstructReplay">GitHub ↗</a>
     </nav>
   </div>
@@ -168,8 +178,8 @@
         <p class="intro">InstructReplay gives the initial model one pass over general instructions, then replays its own assistant turns during factual fine-tuning to preserve how it responds.</p>
         <p class="byline">Xiaofeng Shi, Qian Kou, and Hua Zhou<span>Beijing Academy of Artificial Intelligence (BAAI)</span></p>
         <div class="actions">
-          <a class="button primary" href="#results">Explore the results</a>
-          <a class="button" href="https://github.com/xiaofengShi/InstructReplay">Get the code ↗</a>
+          <a class="button primary" href="try/">Try the metrics</a>
+          <a class="button" href="#results">Explore the results</a>
         </div>
       </div>
       <figure class="scoreboard" aria-labelledby="scoreboard-title">
@@ -197,20 +207,6 @@
     </ul>
   </div>
 
-  <section id="method" class="wrap" aria-labelledby="method-title">
-    <div class="section-head">
-      <div><p class="eyebrow">Method</p><h2 id="method-title">Replay the assistant turn.</h2></div>
-      <p>Factual QA teaches short domain answers. Replay keeps the adapted model close to its original behavior on the general prompts and response prefixes where that behavior was expressed.</p>
-    </div>
-    <ol class="steps">
-      <li><h3>Generate once</h3><p>Run 9,600 general instructions through the initial model’s native chat template and save the sampled replies as exact tokens.</p></li>
-      <li><h3>Pair the inputs</h3><p>Train on one domain QA sequence and one saved assistant turn per pair. Reuse the replay buffer for another domain on the same checkpoint.</p></li>
-      <li><h3>Match the reference</h3><p>Learn domain answers by cross-entropy. Apply forward KL to match the frozen initial model’s full next-token distributions on response positions in replay.</p></li>
-    </ol>
-    <div class="equation"><code>Loss = domain cross-entropy + 0.25 × replay forward KL</code></div>
-    <p class="caption">Each loss term averages over the response tokens in a sequence before averaging over sequences.</p>
-  </section>
-
   <section id="results" class="wrap" aria-labelledby="results-title">
     <div class="section-head">
       <div><p class="eyebrow">Main comparison</p><h2 id="results-title">Highest trade-off score in all six settings.</h2></div>
@@ -218,18 +214,23 @@
     </div>
     <div class="result-head">
       <h3>Per-setting results</h3>
-      <a href="results.csv" download>Download CSV ↓</a>
+      <div class="filter" id="domain-filter" hidden>
+        <label for="results-domain">Domain</label>
+        <select id="results-domain"><option value="all">All domains</option><option value="commoncorpus">CommonCorpus</option><option value="pmc">PMC</option></select>
+        <output id="filter-count" for="results-domain" aria-live="polite">6 of 6 settings</output>
+      </div>
+      <a href="results.csv" download>Download all results ↓</a>
     </div>
     <div class="table-scroll" tabindex="0" role="region" aria-label="Per-setting results, horizontally scrollable on narrow screens">
       <table aria-label="Per-setting results in percentage points">
         <thead><tr><th scope="col">Domain and model</th><th scope="col" class="num">SFT A</th><th scope="col" class="num">SFT F</th><th scope="col" class="num">Replay A</th><th scope="col" class="num">Replay F</th><th scope="col" class="num">Replay S</th><th scope="col">Best baseline S</th></tr></thead>
         <tbody>
-          <tr><th scope="row"><span class="setting">CommonCorpus · Development</span><br>SmolLM3-3B</th><td class="num">7.62</td><td class="num">25.10</td><td class="num replay">5.66</td><td class="num replay">4.66</td><td class="num replay">1.01</td><td>−5.83 · Self-Rewrite</td></tr>
-          <tr><th scope="row"><span class="setting">CommonCorpus · Development</span><br>Qwen3-4B</th><td class="num">8.79</td><td class="num">20.33</td><td class="num replay">9.96</td><td class="num replay">1.40</td><td class="num replay">8.56</td><td>6.82 · Self-Rewrite</td></tr>
-          <tr><th scope="row"><span class="setting">CommonCorpus · Transfer</span><br>Phi-4-mini-instruct</th><td class="num">9.57</td><td class="num">23.51</td><td class="num replay">9.96</td><td class="num replay">2.74</td><td class="num replay">7.22</td><td>2.06 · Self-Rewrite</td></tr>
-          <tr><th scope="row"><span class="setting">PMC · Transfer</span><br>SmolLM3-3B</th><td class="num">20.90</td><td class="num">42.97</td><td class="num replay">22.46</td><td class="num replay">4.26</td><td class="num replay">18.20</td><td>−5.91 · RAFT</td></tr>
-          <tr><th scope="row"><span class="setting">PMC · Transfer</span><br>Qwen3-4B</th><td class="num">18.55</td><td class="num">19.73</td><td class="num replay">18.75</td><td class="num replay">0.17</td><td class="num replay">18.58</td><td>9.79 · RAFT</td></tr>
-          <tr><th scope="row"><span class="setting">PMC · Transfer</span><br>Phi-4-mini-instruct</th><td class="num">25.98</td><td class="num">36.81</td><td class="num replay">26.17</td><td class="num replay">1.39</td><td class="num replay">24.78</td><td>11.86 · RAFT</td></tr>
+          <tr data-domain="commoncorpus"><th scope="row"><span class="setting">CommonCorpus · Development</span><br>SmolLM3-3B</th><td class="num">7.62</td><td class="num">25.10</td><td class="num replay">5.66</td><td class="num replay">4.66</td><td class="num replay">1.01</td><td>−5.83 · Self-Rewrite</td></tr>
+          <tr data-domain="commoncorpus"><th scope="row"><span class="setting">CommonCorpus · Development</span><br>Qwen3-4B</th><td class="num">8.79</td><td class="num">20.33</td><td class="num replay">9.96</td><td class="num replay">1.40</td><td class="num replay">8.56</td><td>6.82 · Self-Rewrite</td></tr>
+          <tr data-domain="commoncorpus"><th scope="row"><span class="setting">CommonCorpus · Transfer</span><br>Phi-4-mini-instruct</th><td class="num">9.57</td><td class="num">23.51</td><td class="num replay">9.96</td><td class="num replay">2.74</td><td class="num replay">7.22</td><td>2.06 · Self-Rewrite</td></tr>
+          <tr data-domain="pmc"><th scope="row"><span class="setting">PMC · Transfer</span><br>SmolLM3-3B</th><td class="num">20.90</td><td class="num">42.97</td><td class="num replay">22.46</td><td class="num replay">4.26</td><td class="num replay">18.20</td><td>−5.91 · RAFT</td></tr>
+          <tr data-domain="pmc"><th scope="row"><span class="setting">PMC · Transfer</span><br>Qwen3-4B</th><td class="num">18.55</td><td class="num">19.73</td><td class="num replay">18.75</td><td class="num replay">0.17</td><td class="num replay">18.58</td><td>9.79 · RAFT</td></tr>
+          <tr data-domain="pmc"><th scope="row"><span class="setting">PMC · Transfer</span><br>Phi-4-mini-instruct</th><td class="num">25.98</td><td class="num">36.81</td><td class="num replay">26.17</td><td class="num replay">1.39</td><td class="num replay">24.78</td><td>11.86 · RAFT</td></tr>
         </tbody>
       </table>
     </div>
@@ -247,6 +248,20 @@
       </div>
       <p>These signed means are distinct from F, which clips declines before averaging. MMLU is scored by option likelihood. <a href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/results.md">Detailed results and protocol notes ↗</a></p>
     </details>
+  </section>
+
+  <section id="method" class="wrap" aria-labelledby="method-title">
+    <div class="section-head">
+      <div><p class="eyebrow">Method</p><h2 id="method-title">Replay the assistant turn.</h2></div>
+      <p>Factual QA teaches short domain answers. Replay keeps the adapted model close to its original behavior on the general prompts and response prefixes where that behavior was expressed.</p>
+    </div>
+    <ol class="steps">
+      <li><h3>Generate once</h3><p>Run 9,600 general instructions through the initial model’s native chat template and save the sampled replies as exact tokens.</p></li>
+      <li><h3>Pair the inputs</h3><p>Train on one domain QA sequence and one saved assistant turn per pair. Reuse the replay buffer for another domain on the same checkpoint.</p></li>
+      <li><h3>Match the reference</h3><p>Learn domain answers by cross-entropy. Apply forward KL to match the frozen initial model’s full next-token distributions on response positions in replay.</p></li>
+    </ol>
+    <div class="equation"><code>Loss = domain cross-entropy + 0.25 × replay forward KL</code></div>
+    <p class="caption">Each loss term averages over the response tokens in a sequence before averaging over sequences.</p>
   </section>
 
   <section id="controls" class="wrap" aria-labelledby="controls-title">
@@ -272,23 +287,38 @@
 
   <section id="reproduce" class="wrap" aria-labelledby="reproduce-title">
     <div class="section-head">
-      <div><p class="eyebrow">Reproduce</p><h2 id="reproduce-title">Run the recipe on your own data.</h2></div>
-      <p>The public implementation includes the replay generator, training loop, evaluation metric aggregation, and CPU tests. Start from a local checkpoint and provide licensed training data and benchmark scorers.</p>
+      <div><p class="eyebrow">Get started</p><h2 id="reproduce-title">From benchmark scores to your own run.</h2></div>
+      <p>Start with the evaluation math on your CPU or browser. For fine-tuning, bring a local checkpoint, licensed data, and the benchmark scorers.</p>
     </div>
-    <div class="use-grid">
+    <div class="entry-list">
       <article class="card">
-        <h3>Get the implementation</h3>
-        <pre><code>git clone https://github.com/xiaofengShi/InstructReplay.git
-cd InstructReplay</code></pre>
-        <div class="actions"><a class="button primary" href="https://github.com/xiaofengShi/InstructReplay#quick-start">CPU quick start ↗</a></div>
+        <h3>Try the calculation</h3>
+        <p>Change five benchmark scores and domain counts, then export the same inputs for the Python CLI.</p>
+        <div class="actions"><a class="button primary" href="try/">Open the playground</a></div>
       </article>
       <article class="card">
-        <h3>Bring a model and paired data</h3>
-        <p>Generate assistant replies once, run factual fine-tuning with replay, then score the adapted checkpoint against the initial one under the same protocol.</p>
-        <div class="actions"><a class="button" href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/training.md">Training guide ↗</a><a class="button" href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/evaluation.md">Evaluation guide ↗</a></div>
+        <h3>Get a fixed version</h3>
+        <p>Download the tagged source archive and its SHA-256 checksum. The release includes the public code, results, and examples.</p>
+        <div class="actions"><a class="button" href="https://github.com/xiaofengShi/InstructReplay/releases/latest">Latest GitHub release ↗</a></div>
+      </article>
+      <article class="card">
+        <h3>Fine-tune on your data</h3>
+        <p>Generate replay once, train on paired inputs, and compare the initial and adapted checkpoints using the same protocol.</p>
+        <div class="actions"><a class="button" href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/training.md">Training guide ↗</a></div>
       </article>
     </div>
     <p class="fine-print"><strong>Study scope.</strong> Three 3–4B-class families, two domains, 300 optimization steps, and shared General benchmark questions. Domain acquisition uses model judges without human calibration. The study leaves safety behavior, long-context use, and larger models open.</p>
+  </section>
+  <section id="community" class="wrap" aria-labelledby="community-title">
+    <div class="section-head">
+      <div><p class="eyebrow">Community</p><h2 id="community-title">Share what happened in your run.</h2></div>
+      <p>Successful, partial, and failed reproductions help show where the recipe transfers. The issue form captures the checkpoint, training setup, and evaluation protocol so others can compare results.</p>
+    </div>
+    <div class="actions">
+      <a class="button primary" href="https://github.com/xiaofengShi/InstructReplay/issues/new?template=reproduction.yml">Share a reproduction ↗</a>
+      <a class="button" href="https://github.com/xiaofengShi/InstructReplay/issues/new?template=bug.yml">Report a bug ↗</a>
+      <a class="button" href="https://github.com/xiaofengShi/InstructReplay/blob/main/CONTRIBUTING.md">Contribute ↗</a>
+    </div>
   </section>
 </main>
 <footer id="citation">

@@ -1,0 +1,24 @@
+name: Reproduction report
+description: Share a successful, partial, or failed run of the recipe.
+title: "[Reproduction] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Release or commit
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup and provenance
+      description: Initial checkpoint revision, domain and replay data sources, step count, replay ratio, and KL weight.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Result and evaluation protocol
+      description: Include initial and adapted scores, sample counts, and scoring protocol, or the stage and error for an incomplete run. Share only public or authorized material.
+    validations:
+      required: true

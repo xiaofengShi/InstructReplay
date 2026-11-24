@@ -14,6 +14,11 @@ dependencies = ["torch>=2.6,<2.7", "transformers==4.57.1", "accelerate==1.6.0"]
 train = ["deepspeed==0.14.3"]
 dev = ["pytest>=8", "ruff>=0.6", "build>=1"]
 
+[project.urls]
+Homepage = "https://xiaofengshi.github.io/InstructReplay/"
+Repository = "https://github.com/xiaofengShi/InstructReplay"
+Issues = "https://github.com/xiaofengShi/InstructReplay/issues"
+
 [project.scripts]
 instructreplay-train = "instructreplay.train:main"
 instructreplay-generate = "instructreplay.generate:main"

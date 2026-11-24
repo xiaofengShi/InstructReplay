@@ -1,67 +1,70 @@
-<p align="center">
-  <img alt="InstructReplay. Mean forgetting fell from 28.07 to 2.44 percentage points while mean factual acquisition was 15.23 versus 15.49 points." src="docs/assets/result-card.png" width="100%">
-</p>
-
 # InstructReplay
 
-**Teach an instruction-tuned model new facts while preserving how it answers.**
+**Add domain knowledge to an instruction-tuned model while retaining its general assistant behavior.**
 
-InstructReplay reuses the initial model’s own assistant turns as a training signal. The initial model answers a set of general instructions once. During factual fine-tuning, a frozen copy of that model supplies next-token targets on the saved replies. This lets the adapted model practice its original assistant behavior alongside learning new facts.
-
-Xiaofeng Shi, Qian Kou, and Hua Zhou · Beijing Academy of Artificial Intelligence (BAAI)
-
-[**Project homepage**](https://xiaofengshi.github.io/InstructReplay/) · [**Results and protocol**](docs/results.md) · [**Training guide**](docs/training.md) · [**Evaluation guide**](docs/evaluation.md) · [**Cite**](#citation)
+[**Try the metrics in your browser**](https://xiaofengshi.github.io/InstructReplay/try/) · [**Explore the evidence**](https://xiaofengshi.github.io/InstructReplay/#results) · [**Train on your data**](docs/training.md) · [**Download a release**](https://github.com/xiaofengShi/InstructReplay/releases/latest)
 
 [![CPU checks](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml)
 [![Apache-2.0 license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-## What we found
+InstructReplay saves the initial model’s own assistant replies to general instructions. During factual fine-tuning, domain answers use cross-entropy and saved replies use forward KL from the frozen initial model. The same replay buffer can be reused for another domain on that checkpoint.
 
-Across three model families and two domains, InstructReplay lowered average forgetting on five General benchmarks from **28.07 to 2.44 percentage points**, with mean domain acquisition of **+15.49 pp** versus **+15.23 pp** for standard fine-tuning. In all six settings it had the highest acquisition-minus-forgetting score among seven tested adaptation baselines.
+<p align="center">
+  <img alt="Across six settings, mean forgetting was 28.07 versus 2.44 percentage points and mean factual acquisition was 15.23 versus 15.49 points." src="docs/assets/result-card.png" width="100%">
+</p>
 
-| Six-setting mean | Standard fine-tuning | InstructReplay |
+## Start here
+
+| Your goal | First step |
+| --- | --- |
+| Understand the trade-off | [Explore all six settings](https://xiaofengshi.github.io/InstructReplay/#results) and [download the reported numbers](docs/results.csv). |
+| Check the evaluation math | [Open the playground](https://xiaofengshi.github.io/InstructReplay/try/) or run the Python example below. Both use the same synthetic inputs. |
+| Adapt a model | [Generate replay and fine-tune](docs/training.md) using your local checkpoint and licensed data. |
+| Report a run or help improve the project | [Share a reproduction](https://github.com/xiaofengShi/InstructReplay/issues/new?template=reproduction.yml), [report a bug](https://github.com/xiaofengShi/InstructReplay/issues/new?template=bug.yml), or read [Contributing](CONTRIBUTING.md). |
+
+## What the study measured
+
+| Mean across six settings | Standard fine-tuning | InstructReplay |
 | --- | ---: | ---: |
-| Domain acquisition, higher is better | +15.23 pp | **+15.49 pp** |
-| General forgetting, lower is better | 28.07 pp | **2.44 pp** |
+| Domain acquisition ↑ | +15.23 pp | **+15.49 pp** |
+| General forgetting ↓ | 28.07 pp | **2.44 pp** |
 | Median IFEval response length relative to the initial model | 0.11× | **0.85×** |
 
-**What gets replayed matters.** The mean IFEval drop was 43.3 pp when KL was applied to domain answers, 14.2 pp on samples from a beginning-of-sequence token, and 2.6 pp on the initial model’s own assistant turns in the native chat template. With the loss and instruction prompts held fixed, replaying self-generated answers gave 3.1 pp forgetting versus 7.5 pp for the tested dataset answers.
+InstructReplay had the highest acquisition-minus-forgetting score **in all six settings** against seven tested adaptation baselines. The same reference loss produced a mean IFEval drop of **43.3 pp** on domain answers, **14.2 pp** on unprompted samples, and **2.6 pp** on the model’s own assistant turns. The BOS and assistant-turn conditions matched their response-token budgets.
 
-The six settings combine SmolLM3-3B, Qwen3-4B, and Phi-4-mini-instruct with CommonCorpus energy/engineering and PMC biomedical QA. The reported acquisition uses model-judge confirmation on 512 closed-book questions per domain. The findings come from short, 300-step adaptation runs on these models and benchmarks. [See all six settings, the matched controls, and limitations.](docs/results.md)
+The study used SmolLM3-3B, Qwen3-4B, and Phi-4-mini-instruct, with CommonCorpus energy/engineering and PMC biomedical questions. Domain acquisition uses model-judge confirmation on 512 closed-book questions per domain. The results cover 300-step runs on these checkpoints. [Read the settings, controls, and limitations.](docs/results.md)
 
-## How it works
+## Run the metrics example
 
-1. **Generate once.** Give the initial model 9,600 general instructions in its native chat template. Save each sampled reply as tokens, preserving where the assistant response starts and ends.
-2. **Train on paired examples.** Combine response-only cross-entropy on a domain answer with forward KL from the frozen initial model on the saved general reply. The two terms normalize each response by its own length.
-3. **Measure acquisition and forgetting.** Score the adapted and initial checkpoints under the same protocol. Report domain acquisition alongside drops on IFEval, MMLU, MATH-500, BBH, and HumanEval+.
-
-The paper used one replay sequence per domain sequence and a replay weight of 0.25. See the [training configuration and execution instructions](docs/training.md).
-
-## Quick start
-
-Check the public implementation on CPU with Python 3.10.
+From the root of a clone, run the public metric CLI using Python 3.10+ and the included synthetic scores. This example uses the standard library and runs on CPU.
 
 ```bash
 git clone https://github.com/xiaofengShi/InstructReplay.git
 cd InstructReplay
-python3.10 -m venv .venv
-source .venv/bin/activate
+PYTHONPATH=src python3 -m instructreplay.metrics docs/try/example.json --output metrics.json
+cat metrics.json
+```
+
+Expected values in percentage points are **A = 12.5**, **F = 3**, **W = 5**, and **S = 9.5**. The output path must be new. The CLI takes already-scored inputs. [See the score format and benchmark protocol.](docs/evaluation.md)
+
+## Run training and tests
+
+1. Supply a local instruction-tuned checkpoint, licensed domain QA and general instructions.
+2. [Generate replies once and train on paired examples](docs/training.md). The study used a 1:1 replay ratio and KL weight 0.25.
+3. Score the initial and adapted checkpoints under the same benchmark protocol, then [aggregate the scores](docs/evaluation.md).
+
+Use the appropriate PyTorch 2.6 build for your runtime. Install the `train` extra for GPU training. For the CPU test suite, use Python 3.10 in a virtual environment.
+
+```bash
 python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 python -m pip install -e '.[dev]'
 CUDA_VISIBLE_DEVICES='' python -m pytest -q
 ```
 
-| I want to… | Start here |
-| --- | --- |
-| Prepare my own replay buffer and fine-tune | [Training guide](docs/training.md) · `instructreplay-generate` and `instructreplay-train` |
-| Recompute A, F, W, and S from scored outputs | [Evaluation guide](docs/evaluation.md) · `instructreplay-metrics` |
-| Inspect or plot the reported results | [Results notes](docs/results.md) · [CSV](docs/results.csv) |
-| Inspect the objective | [Loss implementation](src/instructreplay/losses.py) · [Training step](src/instructreplay/trainer.py) |
+The release includes the replay generator, trainer, configurations, metric CLI, and reported aggregate results. Bring your own model weights, licensed training inputs, and evaluation harnesses.
 
-For GPU training, install the appropriate CUDA build of PyTorch 2.6 and the `train` extra in a separate environment. The training guide covers runtime versions, local model and data inputs, and the run-identity checks. You supply compatible model weights, licensed training data, and the benchmark scorers. The code includes the replay generator, trainer, metric aggregation, configuration, and tests.
+## Citation and license
 
-## Citation
+Xiaofeng Shi, Qian Kou, and Hua Zhou, Beijing Academy of Artificial Intelligence (BAAI). *InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning* (2026). [Citation metadata](CITATION.cff)
 
-If you use the code or reported results, cite Xiaofeng Shi, Qian Kou, and Hua Zhou, *InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning* (2026). [Citation metadata](CITATION.cff)
-
-The software is available under the [Apache License 2.0](LICENSE). [Attribution notices](NOTICE)
+[Apache License 2.0](LICENSE) · [Attribution notices](NOTICE) · [Project homepage](https://xiaofengshi.github.io/InstructReplay/)

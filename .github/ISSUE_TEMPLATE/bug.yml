@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a problem with the code, docs, or metrics playground.
+title: "[Bug] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Release or commit
+      placeholder: v0.1.0 or a commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Include the command or page, runtime versions, and a small public or synthetic example.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Include only logs you can share publicly. Remove credentials, private hosts, and local paths.
+    validations:
+      required: true
