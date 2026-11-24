@@ -2,7 +2,7 @@
 
 **Add domain knowledge to an instruction-tuned model while retaining its general assistant behavior.**
 
-[**Try the metrics in your browser**](https://xiaofengshi.github.io/InstructReplay/try/) · [**Explore the evidence**](https://xiaofengshi.github.io/InstructReplay/#results) · [**Train on your data**](docs/training.md) · [**Download a release**](https://github.com/xiaofengShi/InstructReplay/releases/latest)
+[**Project homepage**](https://xiaofengshi.github.io/InstructReplay/) · [**Try the metrics**](https://xiaofengshi.github.io/InstructReplay/try/) · [**Train on your data**](docs/training.md) · [**Download a release**](#verify-a-release)
 
 [![CPU checks](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml)
 [![Apache-2.0 license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -17,9 +17,9 @@ InstructReplay saves the initial model’s own assistant replies to general inst
 
 | Your goal | First step |
 | --- | --- |
-| Understand the trade-off | [Explore all six settings](https://xiaofengshi.github.io/InstructReplay/#results) and [download the reported numbers](docs/results.csv). |
-| Check the evaluation math | [Open the playground](https://xiaofengshi.github.io/InstructReplay/try/) or run the Python example below. Both use the same synthetic inputs. |
-| Adapt a model | [Generate replay and fine-tune](docs/training.md) using your local checkpoint and licensed data. |
+| Inspect the reported experiments | [Explore all six settings](https://xiaofengshi.github.io/InstructReplay/#results), [download the results CSV](docs/results.csv), and [read the control comparisons](docs/results.md#replay-controls). |
+| Check the evaluation math | [Open the playground](https://xiaofengshi.github.io/InstructReplay/try/) or [run the CPU example](#run-the-metrics-example). Both use the same synthetic scores. |
+| Adapt a model | [Generate replay and fine-tune](docs/training.md) on a GPU execution host using a local checkpoint and licensed data. |
 | Report a run or help improve the project | [Share a reproduction](https://github.com/xiaofengShi/InstructReplay/issues/new?template=reproduction.yml), [report a bug](https://github.com/xiaofengShi/InstructReplay/issues/new?template=bug.yml), or read [Contributing](CONTRIBUTING.md). |
 
 ## What the study measured
@@ -61,7 +61,20 @@ python -m pip install -e '.[dev]'
 CUDA_VISIBLE_DEVICES='' python -m pytest -q
 ```
 
-The release includes the replay generator, trainer, configurations, metric CLI, and reported aggregate results. Bring your own model weights, licensed training inputs, and evaluation harnesses.
+The release includes the replay generator, trainer, configurations, metric CLI, and reported aggregate results. Bring your own model weights, licensed training inputs, and evaluation harnesses. The synthetic example checks score aggregation, and a new GPU run constructs a new replay buffer. See the [evaluation guide](docs/evaluation.md) for the paper protocol and scorer boundaries.
+
+## Verify a release
+
+Download the matching `instructreplay-vX.Y.Z.zip` and `.zip.sha256` assets from the [GitHub release](https://github.com/xiaofengShi/InstructReplay/releases/latest). In the directory containing both files, run the following commands. The example uses v0.1.1.
+
+```bash
+sha256sum --check instructreplay-v0.1.1.zip.sha256
+unzip instructreplay-v0.1.1.zip
+cd instructreplay
+PYTHONPATH=src python3 -m instructreplay.metrics docs/try/example.json --output metrics.json
+```
+
+On macOS, use `shasum -a 256 --check instructreplay-v0.1.1.zip.sha256` for the checksum.
 
 ## Citation and license
 

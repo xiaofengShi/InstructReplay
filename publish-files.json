@@ -1,6 +1,7 @@
 [
   ".github/ISSUE_TEMPLATE/bug.yml",
   ".github/ISSUE_TEMPLATE/reproduction.yml",
+  ".github/pull_request_template.md",
   ".github/workflows/release.yml",
   ".github/workflows/tests.yml",
   ".gitignore",

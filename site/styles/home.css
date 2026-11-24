@@ -158,7 +158,8 @@ summary { padding: .8rem 1.1rem; font-weight: 660; color: var(--replay-label); c
 .control-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: .9rem; }
 .card { padding: clamp(1.05rem, 2.6vw, 1.4rem); }
 .card p { margin-top: .62rem; color: var(--muted); font-size: .94rem; }
-.card a { align-self: flex-start; margin-top: .85rem; }
+.card > a { align-self: flex-start; margin-top: .85rem; }
+.inline-link { color: var(--replay-label); text-decoration: underline; }
 .steps { list-style: none; }
 .steps h3 { margin-top: .8rem; }
 .entry-list .card { display: flex; flex-direction: column; }

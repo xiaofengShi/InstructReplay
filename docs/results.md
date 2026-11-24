@@ -27,7 +27,7 @@ Mean change from the initial checkpoint across the six settings, in pp. Positive
 | Naive SFT | −44.9 | −0.4 | −28.0 | −36.0 | −30.5 |
 | InstructReplay | −2.6 | −1.3 | −0.2 | −0.7 | −1.0 |
 
-Per-benchmark signed means and the forgetting metric F summarize different quantities. F clips each decline before averaging. InstructReplay’s largest observed MMLU drop was 4.56 pp on CommonCorpus with SmolLM3.
+Per-benchmark signed means and the forgetting metric F summarize different quantities. F averages per-setting losses after treating improvements as zero. InstructReplay’s largest observed MMLU drop was 4.56 pp on CommonCorpus with SmolLM3.
 
 ## Replay controls
 

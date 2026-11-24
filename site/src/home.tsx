@@ -214,7 +214,7 @@ function Reproduce() {
           </article>
           <article className="card">
             <h3>Get a fixed version</h3>
-            <p>Download the tagged source archive and its SHA-256 checksum. The release includes the public code, results, and examples.</p>
+            <p>Download the tagged source archive and its SHA-256 checksum. The release includes code, results, and examples. <a className="inline-link" href={`${github}/blob/main/README.md#verify-a-release`}>Verify your download</a>.</p>
             <ButtonLink href={`${github}/releases/latest`} variant="secondary" trailingIcon={RiExternalLinkLine}>Latest GitHub release</ButtonLink>
           </article>
           <article className="card">
