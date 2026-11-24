@@ -1,41 +1,61 @@
 name: Publish source release
 on:
   push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/release.yml'
     tags:
       - 'v[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing annotated release tag
+        required: true
+        type: string
 
 permissions:
   contents: read
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || 'v0.1.1' }}
 
 jobs:
   package:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate the release tag
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]'
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Validate tag and build the source archive
+      - name: Package the exact tagged source and notes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           python - <<'PY'
           import os
-          import re
           import tomllib
           from pathlib import Path
 
-          tag = os.environ["GITHUB_REF_NAME"]
+          tag = os.environ["RELEASE_TAG"]
           version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
-          if not re.fullmatch(r"v\d+\.\d+\.\d+", tag) or tag != f"v{version}":
+          if tag != f"v{version}":
               raise SystemExit(f"tag {tag!r} must match package version {version!r}")
           PY
-          archive="instructreplay-${GITHUB_REF_NAME}.zip"
+          object=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object | select(.type == "tag") | .sha')
+          test -n "$object"
+          target=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$object" --jq '.object | select(.type == "commit") | .sha')
+          test "$target" = "$(git rev-parse HEAD)"
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$object" --jq .message > release-notes.md
+          test -s release-notes.md
+          archive="instructreplay-${RELEASE_TAG}.zip"
           python tools/package.py --output "$archive"
           sha256sum "$archive" > "$archive.sha256"
-          test "$(git cat-file -t "refs/tags/$GITHUB_REF_NAME")" = tag
-          git for-each-ref --format='%(contents)' "refs/tags/$GITHUB_REF_NAME" > release-notes.md
-          test -s release-notes.md
       - uses: actions/upload-artifact@v4
         with:
           name: source-release
@@ -57,8 +77,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          archive="instructreplay-${GITHUB_REF_NAME}.zip"
+          archive="instructreplay-${RELEASE_TAG}.zip"
           sha256sum --check "$archive.sha256"
-          gh release create "$GITHUB_REF_NAME" "$archive" "$archive.sha256" \
+          gh release create "$RELEASE_TAG" "$archive" "$archive.sha256" \
             --repo "$GITHUB_REPOSITORY" --verify-tag --notes-file release-notes.md \
-            --title "InstructReplay $GITHUB_REF_NAME"
+            --title "InstructReplay $RELEASE_TAG"
