@@ -38,6 +38,9 @@ def checked_payload(path):
                 chunks.append(zlib.decompress(stream))
             except zlib.error:
                 pass  # Uncompressed and image streams are also valid PDF content.
+    elif path.suffix == ".png":
+        if not payload.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise ValueError(f"invalid PNG: {path.name}")
     else:
         payload.decode("utf-8")
     hits = sorted(set(name for chunk in chunks for name in scan_bytes(chunk)))

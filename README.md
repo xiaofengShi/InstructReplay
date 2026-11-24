@@ -1,52 +1,67 @@
+<p align="center">
+  <img alt="InstructReplay. Mean forgetting fell from 28.07 to 2.44 percentage points while mean factual acquisition was 15.23 versus 15.49 points." src="docs/assets/result-card.png" width="100%">
+</p>
+
 # InstructReplay
 
-**Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning**
+**Teach an instruction-tuned model new facts while preserving how it answers.**
 
-Xiaofeng Shi, Qian Kou, Hua Zhou · Beijing Academy of Artificial Intelligence (BAAI)
+InstructReplay reuses the initial model’s own assistant turns as a training signal. The initial model answers a set of general instructions once. During factual fine-tuning, a frozen copy of that model supplies next-token targets on the saved replies. This lets the adapted model practice its original assistant behavior alongside learning new facts.
 
+Xiaofeng Shi, Qian Kou, and Hua Zhou · Beijing Academy of Artificial Intelligence (BAAI)
 
-InstructReplay preserves an initial instruction-tuned model's behavior by replaying its own responses to general instructions during domain fine-tuning. A frozen copy of the initial model supplies full-vocabulary next-token distributions on those saved responses. The objective combines response-only domain cross-entropy with forward KL on replay prefixes, with each sequence normalized by its own response length.
+[**Project homepage**](https://xiaofengshi.github.io/InstructReplay/) · [**Results and protocol**](docs/results.md) · [**Training guide**](docs/training.md) · [**Evaluation guide**](docs/evaluation.md) · [**Cite**](#citation)
 
-## Install
+[![CPU checks](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml)
+[![Apache-2.0 license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-Use Python 3.10 and install a PyTorch 2.6 build appropriate for your CUDA driver before installing this package. The training stack uses Transformers 4.57.1, Accelerate 1.6.0 and DeepSpeed 0.14.3.
+## What we found
+
+Across three model families and two domains, InstructReplay lowered average forgetting on five General benchmarks from **28.07 to 2.44 percentage points**, with mean domain acquisition of **+15.49 pp** versus **+15.23 pp** for standard fine-tuning. In all six settings it had the highest acquisition-minus-forgetting score among seven tested adaptation baselines.
+
+| Six-setting mean | Standard fine-tuning | InstructReplay |
+| --- | ---: | ---: |
+| Domain acquisition, higher is better | +15.23 pp | **+15.49 pp** |
+| General forgetting, lower is better | 28.07 pp | **2.44 pp** |
+| Median IFEval response length relative to the initial model | 0.11× | **0.85×** |
+
+**What gets replayed matters.** The mean IFEval drop was 43.3 pp when KL was applied to domain answers, 14.2 pp on samples from a beginning-of-sequence token, and 2.6 pp on the initial model’s own assistant turns in the native chat template. With the loss and instruction prompts held fixed, replaying self-generated answers gave 3.1 pp forgetting versus 7.5 pp for the tested dataset answers.
+
+The six settings combine SmolLM3-3B, Qwen3-4B, and Phi-4-mini-instruct with CommonCorpus energy/engineering and PMC biomedical QA. The reported acquisition uses model-judge confirmation on 512 closed-book questions per domain. The findings come from short, 300-step adaptation runs on these models and benchmarks. [See all six settings, the matched controls, and limitations.](docs/results.md)
+
+## How it works
+
+1. **Generate once.** Give the initial model 9,600 general instructions in its native chat template. Save each sampled reply as tokens, preserving where the assistant response starts and ends.
+2. **Train on paired examples.** Combine response-only cross-entropy on a domain answer with forward KL from the frozen initial model on the saved general reply. The two terms normalize each response by its own length.
+3. **Measure acquisition and forgetting.** Score the adapted and initial checkpoints under the same protocol. Report domain acquisition alongside drops on IFEval, MMLU, MATH-500, BBH, and HumanEval+.
+
+The paper used one replay sequence per domain sequence and a replay weight of 0.25. See the [training configuration and execution instructions](docs/training.md).
+
+## Quick start
+
+Check the public implementation on CPU with Python 3.10.
 
 ```bash
+git clone https://github.com/xiaofengShi/InstructReplay.git
+cd InstructReplay
+python3.10 -m venv .venv
+source .venv/bin/activate
+python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 python -m pip install -e '.[dev]'
-CUDA_VISIBLE_DEVICES='' python -m pytest
+CUDA_VISIBLE_DEVICES='' python -m pytest -q
 ```
 
-## Run
-
-1. Obtain a local initial model and your own licensed domain and replay instructions. Keep the native tokenizer and chat template with the model weights. No training data, model weights, benchmark questions or credentials are distributed here.
-2. Generate saved-token responses once with `instructreplay-generate`.
-3. Fine-tune on paired domain/replay records with `instructreplay-train`.
-4. Run the benchmark scorers described in [evaluation](docs/evaluation.md), then aggregate the five scores with `instructreplay-metrics`.
-
-See [training](docs/training.md) for the complete commands, data contract, host binding and input hashes. GPU commands require an explicitly inspected execution host distinct from the coordinator.
-
-Install the optional training engine with `python -m pip install -e '.[train]'` in the GPU environment. CPU checks can run without DeepSpeed or Triton installed.
-
-## Package structure
-
-| Path | Responsibility |
+| I want to… | Start here |
 | --- | --- |
-| `src/instructreplay/data.py` | Exact saved-token masks, paired datasets and right padding |
-| `src/instructreplay/losses.py` | Sequence-normalized cross-entropy and forward KL |
-| `src/instructreplay/trainer.py` | Frozen reference, runtime identity and joint objective |
-| `src/instructreplay/generate.py` | Offline instruction-response replay generation |
-| `src/instructreplay/train.py` | One-pass distributed training and run receipts |
-| `src/instructreplay/metrics.py` | Five-benchmark A/F/W/S aggregation |
-| `src/instructreplay/models.py`, `io.py` | Native model loading, content hashes and JSONL |
-| `configs/` | Method hyperparameters and ZeRO-2 configuration |
-| `tests/` | CPU numerical, masking, data, runtime and metric checks |
+| Prepare my own replay buffer and fine-tune | [Training guide](docs/training.md) · `instructreplay-generate` and `instructreplay-train` |
+| Recompute A, F, W, and S from scored outputs | [Evaluation guide](docs/evaluation.md) · `instructreplay-metrics` |
+| Inspect or plot the reported results | [Results notes](docs/results.md) · [CSV](docs/results.csv) |
+| Inspect the objective | [Loss implementation](src/instructreplay/losses.py) · [Training step](src/instructreplay/trainer.py) |
 
-## Reproducibility
+For GPU training, install the appropriate CUDA build of PyTorch 2.6 and the `train` extra in a separate environment. The training guide covers runtime versions, local model and data inputs, and the run-identity checks. You supply compatible model weights, licensed training data, and the benchmark scorers. The code includes the replay generator, trainer, metric aggregation, configuration, and tests.
 
-This release contains the method implementation and a portable training interface. Its extracted loss/data/runtime functions are covered by CPU regression tests. The distributed command is a new interface and requires validation on the chosen GPU runtime before attributing a run to the published results.
+## Citation
 
-The paper uses three model families, two domains, 9,600 domain/replay pairs and 300 optimizer steps. Complete row-level redistribution permission for the experimental data mixture is not established, so this repository cannot reproduce the reported training or benchmark results by itself. The paper's companion supplement supplies final result tables and checks; it is distributed separately from the software.
+If you use the code or reported results, cite Xiaofeng Shi, Qian Kou, and Hua Zhou, *InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning* (2026). [Citation metadata](CITATION.cff)
 
-## License and citation
-
-Original software is available under [Apache-2.0](LICENSE). Model, data and external benchmark licenses remain with their respective owners. Author and citation metadata are in [CITATION.cff](CITATION.cff).
+The software is available under the [Apache License 2.0](LICENSE). [Attribution notices](NOTICE)

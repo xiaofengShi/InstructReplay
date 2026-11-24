@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="InstructReplay preserves general assistant behavior during factual fine-tuning. Explore the research results, training recipe, and open source implementation.">
+<meta name="theme-color" content="#142829">
+<link rel="canonical" href="https://xiaofengshi.github.io/InstructReplay/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="InstructReplay — Learn new facts. Keep the assistant.">
+<meta property="og:description" content="Across six settings, mean general forgetting fell from 28.07 to 2.44 percentage points while factual acquisition stayed comparable.">
+<meta property="og:url" content="https://xiaofengshi.github.io/InstructReplay/">
+<meta property="og:image" content="https://xiaofengshi.github.io/InstructReplay/assets/result-card.png">
+<meta property="og:image:alt" content="Mean forgetting 28.07 versus 2.44 points. Mean acquisition 15.23 versus 15.49 points.">
+<meta name="twitter:card" content="summary_large_image">
+<title>InstructReplay · Factual fine-tuning with assistant-turn replay</title>
+<style>
+  :root {
+    color-scheme: light;
+    --paper:#f7f5ef; --white:#fffdf8; --ink:#182c2c; --muted:#46605c;
+    --forest:#124c43; --teal:#216b5d; --mint:#bdeecf; --line:#ccd7ca;
+    --accent:#ad622c; --night:#142829; --night-card:#1d3435;
+    --sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+  }
+  *,*::before,*::after {box-sizing:border-box}
+  body {margin:0;background:var(--paper);color:var(--ink);font:1rem/1.6 var(--sans)}
+  a {color:var(--forest);text-underline-offset:.2em}
+  a:hover {text-decoration-thickness:.13em}
+  :focus-visible {outline:3px solid #a45c20;outline-offset:4px}
+  .dark :focus-visible {outline-color:var(--mint)}
+  .wrap {width:min(100% - 2.5rem,74rem);margin-inline:auto}
+  .skip {position:absolute;top:.5rem;left:.5rem;z-index:2;padding:.7rem 1rem;background:var(--white);color:var(--ink);transform:translateY(-150%)}
+  .skip:focus {transform:none}
+  h1,h2,p,figure {margin:0}
+  h1,h2 {font-family:var(--serif);font-weight:400;line-height:1.04;letter-spacing:-.045em;text-wrap:balance}
+  h1 {font-size:clamp(3rem,6.7vw,6.35rem);max-width:9em}
+  h2 {font-size:clamp(2.4rem,4.4vw,4.1rem)}
+  h3 {margin:0;font-size:1.14rem;line-height:1.3}
+  .dark {color:#f7f7ea;background:var(--night)}
+  header {border-bottom:1px solid #3b5251}
+  header .wrap {display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:4.5rem}
+  .brand {color:inherit;text-decoration:none;font-weight:750;font-size:1.05rem;display:inline-flex;align-items:center;gap:.62rem;white-space:nowrap}
+  .brand-mark {display:inline-grid;place-items:center;width:1.88rem;height:1.88rem;border:1px solid #7f9e8d;color:var(--mint);font-size:1.3rem;line-height:1;border-radius:.4rem}
+  nav {display:flex;align-items:center;gap:clamp(.75rem,3vw,2rem);font-size:.91rem}
+  nav a {display:inline-flex;align-items:center;min-height:44px;color:#deebe2;text-decoration:none}
+  nav a:hover {text-decoration:underline}
+  .hero {padding-block:clamp(3.3rem,8vw,7rem);background:radial-gradient(ellipse at 80% 30%, #24403b, transparent 57%),var(--night)}
+  .hero-grid {display:grid;grid-template-columns:1.17fr 1fr;align-items:center;gap:clamp(2rem,5.5vw,5rem)}
+  .eyebrow {font:650 .77rem/1.35 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--teal);margin-bottom:1rem}
+  .dark .eyebrow {color:var(--mint)}
+  .intro {max-width:34rem;margin-top:1.35rem;color:#d7e6db;font-size:clamp(1.02rem,2vw,1.2rem)}
+  .byline {margin-top:1.3rem;font-size:.9rem;line-height:1.55;color:#cae0d1}
+  .byline span {display:block;color:#b1c7bb}
+  .actions {display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.65rem}
+  .button {display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.62rem 1rem;border:1px solid var(--forest);border-radius:.45rem;font-weight:700;font-size:.92rem;text-decoration:none}
+  .button:hover {text-decoration:underline}
+  .button.primary {background:var(--forest);color:white}
+  .dark .button {color:#ebf4ec;border-color:#749584}
+  .dark .button.primary {background:var(--mint);color:#172e28;border-color:var(--mint)}
+  .scoreboard {padding:clamp(1.3rem,3vw,2.05rem);background:var(--night-card);border:1px solid #526b63;border-radius:1rem;box-shadow:0 1.3rem 3.6rem #0d1b1c50}
+  .scoreboard h2 {font:700 1.07rem/1.3 var(--sans);letter-spacing:0}
+  .scoreboard figcaption {font-size:.83rem;color:#c3d5c9;margin-top:.42rem}
+  .comparison {margin-top:1.46rem}
+  .comparison + .comparison {padding-top:1.35rem;border-top:1px solid #516761}
+  .comparison h3 {font-size:.9rem;margin-bottom:.65rem;color:#e4ede6}
+  .series {display:grid;grid-template-columns:minmax(6.3rem,auto) 1fr 3.5rem;align-items:center;gap:.6rem;font-size:.82rem;margin-block:.5rem}
+  .series strong {font-family:var(--mono);font-size:.94rem;text-align:right}
+  .series.replay strong {color:var(--mint)}
+  .track {height:.58rem;border-radius:1rem;background:#405552}
+  .bar {display:block;width:var(--w);height:100%;border-radius:inherit;background:#d99a69}
+  .series.replay .bar {background:var(--mint)}
+  .panel-foot {margin-top:1.25rem;color:#c3d5c9;font-size:.79rem}
+  .fact-row {border-bottom:1px solid var(--line);background:#ecefe4}
+  .fact-row ul {margin-block:0;padding-block:1.05rem;padding-inline-start:0;display:grid;grid-template-columns:repeat(3,1fr);list-style:none;gap:.65rem;text-align:center}
+  .fact-row li {font-size:.87rem;color:var(--muted)}
+  .fact-row strong {font-family:var(--mono);color:var(--forest);font-weight:800;font-size:1.06rem;margin-inline-end:.28rem}
+  section {padding-block:clamp(3.5rem,7.7vw,6.5rem);scroll-margin-top:1rem}
+  section + section {border-top:1px solid var(--line)}
+  .section-head {display:grid;grid-template-columns:1.03fr 1fr;align-items:end;gap:clamp(.9rem,4vw,3rem);margin-bottom:2.2rem}
+  .section-head p:last-child {max-width:39rem;color:var(--muted)}
+  .section-head .eyebrow {margin-bottom:.65rem}
+  .steps {list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;counter-reset:steps}
+  .steps li {counter-increment:steps;background:var(--white);border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:.45rem;padding:1.35rem}
+  .steps li::before {content:"0" counter(steps);display:block;font:750 .9rem/1 var(--mono);color:var(--teal);margin-bottom:1.1rem}
+  .steps p {color:var(--muted);font-size:.94rem;margin-top:.55rem}
+  .equation {margin-top:1.25rem;color:var(--forest);padding:.75rem 1rem;border-left:3px solid var(--teal);background:#ebf0e7;overflow-wrap:anywhere}
+  .equation code {font:650 .92rem/1.65 var(--mono)}
+  .caption {font-size:.88rem;color:var(--muted);margin-top:.75rem}
+  .result-head {display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.7rem}
+  .result-head a {display:inline-flex;align-items:center;min-height:44px;font-size:.89rem}
+  .table-scroll {overflow-x:auto;border:1px solid var(--line);background:var(--white);border-radius:.6rem}
+  table {border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums;text-align:left}
+  th,td {padding:.72rem .86rem;border-bottom:1px solid var(--line)}
+  thead th {background:#e8eee2;color:var(--forest);font-size:.82rem;vertical-align:bottom}
+  tbody tr:last-child>* {border-bottom:0}
+  tbody th {font-weight:650}
+  .num {text-align:right;white-space:nowrap}
+  .num.replay {color:var(--forest);font-weight:750;background:#f2f7ed}
+  .setting {color:var(--muted);font-size:.78rem}
+  details {margin-top:1.15rem;background:var(--white);border:1px solid var(--line);border-radius:.55rem;padding:0 1rem}
+  summary {padding:.8rem 0;color:var(--forest);cursor:pointer;font-weight:700}
+  details p,details .table-scroll {margin-bottom:1rem}
+  details p {color:var(--muted);font-size:.9rem}
+  .controls {display:grid;grid-template-columns:1.18fr 1fr;gap:1.1rem}
+  .card {padding:1.3rem;border:1px solid var(--line);border-radius:.6rem;background:var(--white)}
+  .card h3 {margin-bottom:.65rem}
+  .card p {font-size:.94rem;color:var(--muted)}
+  .small-chart {display:grid;grid-template-columns:8.2rem 1fr 3.9rem;align-items:center;gap:.65rem;font-size:.85rem;margin:.5rem 0}
+  .small-chart .track {background:#e6e9de}
+  .small-chart .bar {background:var(--accent)}
+  .small-chart.replay .bar {background:var(--teal)}
+  .small-chart strong {text-align:right;font-family:var(--mono);white-space:nowrap}
+  .card p + p {margin-top:.65rem}
+  .use-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+  .use-grid .actions {margin-top:1rem}
+  pre {margin:.8rem 0 0;padding:.95rem 1rem;background:var(--night);color:#eff9ef;border-radius:.45rem;overflow-x:auto;font: .84rem/1.6 var(--mono)}
+  .fine-print {margin-top:1.35rem;font-size:.92rem;color:var(--muted);max-width:75ch}
+  footer {border-top:1px solid var(--line);padding-block:2.25rem;background:#ecefe4}
+  footer p {max-width:70ch;font-size:.91rem}
+  footer .links {display:flex;gap:1rem;flex-wrap:wrap;margin-top:.7rem}
+  @media (max-width:55rem) {.hero-grid,.section-head,.controls,.use-grid {grid-template-columns:minmax(0,1fr)}.hero-grid {gap:2rem}.scoreboard {max-width:42rem}.section-head {gap:.8rem}}
+  @media (max-width:38rem) {
+    .wrap {width:calc(100% - 1.5rem)}
+    header .wrap {gap:0;min-height:0;align-items:flex-start;flex-direction:column;padding:.7rem 0 .25rem}
+    nav {gap:1rem;flex-wrap:wrap}
+    .steps{grid-template-columns:1fr}
+    .fact-row li {line-height:1.3;font-size:.8rem}
+    .fact-row strong {display:block;margin:0}
+    .series {grid-template-columns:6.4rem 1fr 2.85rem}
+    .small-chart {grid-template-columns:6.5rem 1fr 3.25rem;gap:.45rem}
+    .result-head {align-items:flex-start}
+    .table-scroll table {min-width:40rem}
+  }
+  @media print {
+    .wrap {width:100%}
+    header, .actions, .skip {display:none}
+    .dark,.hero,.scoreboard {background:white;color:var(--ink);box-shadow:none}
+    .dark .eyebrow,.byline,.byline span,.intro,.comparison h3,.scoreboard figcaption,.panel-foot,.series.replay strong {color:var(--ink)}
+    section,.hero {padding-block:1.1rem}
+    h1 {font-size:38pt}
+    h2 {font-size:26pt}
+    .table-scroll {overflow:visible}
+    table {break-inside:avoid}
+  }
+</style>
+</head>
+<body id="top">
+<a class="skip" href="#main">Skip to content</a>
+<header class="dark">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">↻</span> InstructReplay</a>
+    <nav aria-label="Project navigation">
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#reproduce">Reproduce</a>
+      <a href="https://github.com/xiaofengShi/InstructReplay">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <div class="hero dark">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Factual fine-tuning · 2026 study</p>
+        <h1>Learn new facts.<br>Keep the assistant.</h1>
+        <p class="intro">InstructReplay gives the initial model one pass over general instructions, then replays its own assistant turns during factual fine-tuning to preserve how it responds.</p>
+        <p class="byline">Xiaofeng Shi, Qian Kou, and Hua Zhou<span>Beijing Academy of Artificial Intelligence (BAAI)</span></p>
+        <div class="actions">
+          <a class="button primary" href="#results">Explore the results</a>
+          <a class="button" href="https://github.com/xiaofengShi/InstructReplay">Get the code ↗</a>
+        </div>
+      </div>
+      <figure class="scoreboard" aria-labelledby="scoreboard-title">
+        <h2 id="scoreboard-title">Acquisition stays close. Forgetting falls.</h2>
+        <figcaption>Mean across six model–domain settings, in percentage points.</figcaption>
+        <div class="comparison">
+          <h3>General forgetting ↓</h3>
+          <div class="series"><span>Naive SFT</span><span class="track" aria-hidden="true"><i class="bar" style="--w:93.57%"></i></span><strong>28.07</strong></div>
+          <div class="series replay"><span>InstructReplay</span><span class="track" aria-hidden="true"><i class="bar" style="--w:8.13%"></i></span><strong>2.44</strong></div>
+        </div>
+        <div class="comparison">
+          <h3>Domain acquisition ↑</h3>
+          <div class="series"><span>Naive SFT</span><span class="track" aria-hidden="true"><i class="bar" style="--w:76.15%"></i></span><strong>15.23</strong></div>
+          <div class="series replay"><span>InstructReplay</span><span class="track" aria-hidden="true"><i class="bar" style="--w:77.45%"></i></span><strong>15.49</strong></div>
+        </div>
+        <p class="panel-foot">Each comparison uses a common scale within its two methods.</p>
+      </figure>
+    </div>
+  </div>
+  <div class="fact-row">
+    <ul class="wrap" aria-label="Experimental scope">
+      <li><strong>3</strong> model families</li>
+      <li><strong>2</strong> domains</li>
+      <li><strong>5</strong> General benchmarks</li>
+    </ul>
+  </div>
+
+  <section id="method" class="wrap" aria-labelledby="method-title">
+    <div class="section-head">
+      <div><p class="eyebrow">Method</p><h2 id="method-title">Replay the assistant turn.</h2></div>
+      <p>Factual QA teaches short domain answers. Replay keeps the adapted model close to its original behavior on the general prompts and response prefixes where that behavior was expressed.</p>
+    </div>
+    <ol class="steps">
+      <li><h3>Generate once</h3><p>Run 9,600 general instructions through the initial model’s native chat template and save the sampled replies as exact tokens.</p></li>
+      <li><h3>Pair the inputs</h3><p>Train on one domain QA sequence and one saved assistant turn per pair. Reuse the replay buffer for another domain on the same checkpoint.</p></li>
+      <li><h3>Match the reference</h3><p>Learn domain answers by cross-entropy. Apply forward KL to match the frozen initial model’s full next-token distributions on response positions in replay.</p></li>
+    </ol>
+    <div class="equation"><code>Loss = domain cross-entropy + 0.25 × replay forward KL</code></div>
+    <p class="caption">Each loss term averages over the response tokens in a sequence before averaging over sequences.</p>
+  </section>
+
+  <section id="results" class="wrap" aria-labelledby="results-title">
+    <div class="section-head">
+      <div><p class="eyebrow">Main comparison</p><h2 id="results-title">Highest trade-off score in all six settings.</h2></div>
+      <p>InstructReplay outscored all seven adaptation baselines on <strong>S = A − F</strong> in each setting. Across the four transfer settings, its lead over the strongest baseline ranged from <strong>5.16 to 24.11 points</strong>.</p>
+    </div>
+    <div class="result-head">
+      <h3>Per-setting results</h3>
+      <a href="results.csv" download>Download CSV ↓</a>
+    </div>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Per-setting results, horizontally scrollable on narrow screens">
+      <table aria-label="Per-setting results in percentage points">
+        <thead><tr><th scope="col">Domain and model</th><th scope="col" class="num">SFT A</th><th scope="col" class="num">SFT F</th><th scope="col" class="num">Replay A</th><th scope="col" class="num">Replay F</th><th scope="col" class="num">Replay S</th><th scope="col">Best baseline S</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><span class="setting">CommonCorpus · Development</span><br>SmolLM3-3B</th><td class="num">7.62</td><td class="num">25.10</td><td class="num replay">5.66</td><td class="num replay">4.66</td><td class="num replay">1.01</td><td>−5.83 · Self-Rewrite</td></tr>
+          <tr><th scope="row"><span class="setting">CommonCorpus · Development</span><br>Qwen3-4B</th><td class="num">8.79</td><td class="num">20.33</td><td class="num replay">9.96</td><td class="num replay">1.40</td><td class="num replay">8.56</td><td>6.82 · Self-Rewrite</td></tr>
+          <tr><th scope="row"><span class="setting">CommonCorpus · Transfer</span><br>Phi-4-mini-instruct</th><td class="num">9.57</td><td class="num">23.51</td><td class="num replay">9.96</td><td class="num replay">2.74</td><td class="num replay">7.22</td><td>2.06 · Self-Rewrite</td></tr>
+          <tr><th scope="row"><span class="setting">PMC · Transfer</span><br>SmolLM3-3B</th><td class="num">20.90</td><td class="num">42.97</td><td class="num replay">22.46</td><td class="num replay">4.26</td><td class="num replay">18.20</td><td>−5.91 · RAFT</td></tr>
+          <tr><th scope="row"><span class="setting">PMC · Transfer</span><br>Qwen3-4B</th><td class="num">18.55</td><td class="num">19.73</td><td class="num replay">18.75</td><td class="num replay">0.17</td><td class="num replay">18.58</td><td>9.79 · RAFT</td></tr>
+          <tr><th scope="row"><span class="setting">PMC · Transfer</span><br>Phi-4-mini-instruct</th><td class="num">25.98</td><td class="num">36.81</td><td class="num replay">26.17</td><td class="num replay">1.39</td><td class="num replay">24.78</td><td>11.86 · RAFT</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption"><strong>A</strong> is the signed acquisition gain on 512 closed-book domain questions. <strong>F</strong> is the mean of the nonnegative drops on five General benchmarks. Scores are in percentage points relative to the initial model.</p>
+    <details>
+      <summary>See the change on each General benchmark</summary>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Mean changes by General benchmark">
+        <table aria-label="Mean benchmark changes in percentage points">
+          <thead><tr><th scope="col">Method</th><th scope="col" class="num">IFEval</th><th scope="col" class="num">MMLU</th><th scope="col" class="num">MATH-500</th><th scope="col" class="num">BBH</th><th scope="col" class="num">HumanEval+</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Naive SFT</th><td class="num">−44.9</td><td class="num">−0.4</td><td class="num">−28.0</td><td class="num">−36.0</td><td class="num">−30.5</td></tr>
+            <tr><th scope="row">InstructReplay</th><td class="num replay">−2.6</td><td class="num replay">−1.3</td><td class="num replay">−0.2</td><td class="num replay">−0.7</td><td class="num replay">−1.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>These signed means are distinct from F, which clips declines before averaging. MMLU is scored by option likelihood. <a href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/results.md">Detailed results and protocol notes ↗</a></p>
+    </details>
+  </section>
+
+  <section id="controls" class="wrap" aria-labelledby="controls-title">
+    <div class="section-head">
+      <div><p class="eyebrow">Controlled comparisons</p><h2 id="controls-title">Where replay happens matters.</h2></div>
+      <p>Applying the reference loss to the initial model’s assistant turns preserved instruction following better than applying it to domain answers or unprompted samples.</p>
+    </div>
+    <div class="controls">
+      <figure class="card" aria-labelledby="control-chart-title">
+        <h3 id="control-chart-title">Mean IFEval drop by KL context</h3>
+        <div class="small-chart"><span>Domain answers</span><span class="track" aria-hidden="true"><i class="bar" style="--w:96.22%"></i></span><strong>43.3</strong></div>
+        <div class="small-chart"><span>BOS samples</span><span class="track" aria-hidden="true"><i class="bar" style="--w:31.56%"></i></span><strong>14.2</strong></div>
+        <div class="small-chart replay"><span>Assistant turns</span><span class="track" aria-hidden="true"><i class="bar" style="--w:5.78%"></i></span><strong>2.6</strong></div>
+        <figcaption class="caption">Percentage points across six settings. BOS replay and assistant-turn replay matched response-token budgets. Domain-KL saw fewer positions.</figcaption>
+      </figure>
+      <article class="card">
+        <h3>The model’s own answers retain more.</h3>
+        <p>With the same prompts and token loss, replaying answers from the initial model resulted in <strong>3.1 pp</strong> forgetting. Replaying the tested dataset’s answers gave <strong>7.5 pp</strong>.</p>
+        <p>On the initial model’s answers, soft targets gave <strong>2.4 pp</strong> forgetting at the same replay weight. <a href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/results.md#replay-controls">See all controls ↗</a></p>
+      </article>
+    </div>
+  </section>
+
+  <section id="reproduce" class="wrap" aria-labelledby="reproduce-title">
+    <div class="section-head">
+      <div><p class="eyebrow">Reproduce</p><h2 id="reproduce-title">Run the recipe on your own data.</h2></div>
+      <p>The public implementation includes the replay generator, training loop, evaluation metric aggregation, and CPU tests. Start from a local checkpoint and provide licensed training data and benchmark scorers.</p>
+    </div>
+    <div class="use-grid">
+      <article class="card">
+        <h3>Get the implementation</h3>
+        <pre><code>git clone https://github.com/xiaofengShi/InstructReplay.git
+cd InstructReplay</code></pre>
+        <div class="actions"><a class="button primary" href="https://github.com/xiaofengShi/InstructReplay#quick-start">CPU quick start ↗</a></div>
+      </article>
+      <article class="card">
+        <h3>Bring a model and paired data</h3>
+        <p>Generate assistant replies once, run factual fine-tuning with replay, then score the adapted checkpoint against the initial one under the same protocol.</p>
+        <div class="actions"><a class="button" href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/training.md">Training guide ↗</a><a class="button" href="https://github.com/xiaofengShi/InstructReplay/blob/main/docs/evaluation.md">Evaluation guide ↗</a></div>
+      </article>
+    </div>
+    <p class="fine-print"><strong>Study scope.</strong> Three 3–4B-class families, two domains, 300 optimization steps, and shared General benchmark questions. Domain acquisition uses model judges without human calibration. The study leaves safety behavior, long-context use, and larger models open.</p>
+  </section>
+</main>
+<footer id="citation">
+  <div class="wrap">
+    <h3>Citation</h3>
+    <p>Xiaofeng Shi, Qian Kou, and Hua Zhou. <cite>InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning.</cite> 2026.</p>
+    <p class="links"><a href="https://github.com/xiaofengShi/InstructReplay/blob/main/CITATION.cff">Citation metadata</a><a href="https://github.com/xiaofengShi/InstructReplay/blob/main/LICENSE">Apache-2.0 software license</a></p>
+  </div>
+</footer>
+</body>
+</html>

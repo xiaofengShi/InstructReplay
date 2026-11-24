@@ -1,0 +1,7 @@
+domain,model,naive_sft_A_pp,naive_sft_F_pp,naive_sft_S_pp,instructreplay_A_pp,instructreplay_F_pp,instructreplay_S_pp,best_baseline,best_baseline_S_pp,delta_S_pp,setting
+CommonCorpus,SmolLM3-3B,7.62,25.10,-17.49,5.66,4.66,1.01,Self-Rewrite,-5.83,6.84,development
+CommonCorpus,Qwen3-4B,8.79,20.33,-11.54,9.96,1.40,8.56,Self-Rewrite,6.82,1.74,development
+CommonCorpus,Phi-4-mini-instruct,9.57,23.51,-13.94,9.96,2.74,7.22,Self-Rewrite,2.06,5.16,transfer
+PMC,SmolLM3-3B,20.90,42.97,-22.07,22.46,4.26,18.20,RAFT,-5.91,24.11,transfer
+PMC,Qwen3-4B,18.55,19.73,-1.17,18.75,0.17,18.58,RAFT,9.79,8.80,transfer
+PMC,Phi-4-mini-instruct,25.98,36.81,-10.83,26.17,1.39,24.78,RAFT,11.86,12.93,transfer
