@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "instructreplay"
+version = "0.1.0"
+description = "Instruction-context replay for factual fine-tuning"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.6,<2.7", "transformers==4.57.1", "accelerate==1.6.0"]
+
+[project.optional-dependencies]
+train = ["deepspeed==0.14.3"]
+dev = ["pytest>=8", "ruff>=0.6", "build>=1"]
+
+[project.scripts]
+instructreplay-train = "instructreplay.train:main"
+instructreplay-generate = "instructreplay.generate:main"
+instructreplay-metrics = "instructreplay.metrics:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

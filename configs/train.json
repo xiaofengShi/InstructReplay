@@ -1,0 +1,9 @@
+{
+  "max_steps": 300,
+  "max_length": 2048,
+  "effective_batch_size": 32,
+  "micro_batch_size": 1,
+  "learning_rate": 0.00001,
+  "kl_coefficient": 0.25,
+  "seed": 42
+}
