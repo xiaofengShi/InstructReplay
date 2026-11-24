@@ -14,3 +14,7 @@ Use synthetic inputs or public, licensed examples. Remove credentials, private h
 - In the description, identify the behavior that changes and the test or example that demonstrates it.
 - Run `python -m pytest -q`, `ruff check src tests tools`, and `python tools/package.py` in the [CPU environment](README.md#run-training-and-tests). For playground changes, run `node --test tests/playground.test.mjs`.
 - When a change adds a public file, include it in `publish-files.json` so tagged builds contain the same public files.
+
+## Publish a source release
+
+Maintainers keep the Python project, module and citation versions in sync. Push an annotated `vX.Y.Z` tag with the release notes. The release workflow checks the tag, packages the public allowlist and publishes the source ZIP and checksum. If publication fails before a release exists, rerun the failed job or run **Publish source release** from Actions with the existing tag.
