@@ -8,7 +8,7 @@ The final paper uses five General benchmarks: IFEval (120 prompts, prompt-level 
 
 Use the paper's sampling, decoding and scoring specifications for comparability. Generation-based MMLU is a different evaluation. HumanEval+ requires both base and extended EvalPlus tests to pass; model-generated code must execute in an isolated evaluator. IFEval character-frequency constraints must use literal character counts, and its fallback randomness must be seeded. BBH answers require task-aware extraction. Fully indented Python function responses must be dedented before execution. These scorer choices can materially affect the scores.
 
-This package aggregates already scored results; it does not ship the benchmark harnesses, judge services or evaluation question text. The arXiv source and companion supplement provide the detailed scoring protocol and final tables.
+This package aggregates already scored results; it does not ship the benchmark harnesses, judge services or evaluation question text. The [arXiv preprint and its ancillary files](https://arxiv.org/abs/2611.32918) provide the detailed scoring protocol and final tables.
 
 ## Metrics
 

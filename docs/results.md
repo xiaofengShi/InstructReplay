@@ -1,6 +1,6 @@
 # InstructReplay results
 
-These are aggregate results from *InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning* by Xiaofeng Shi, Qian Kou, and Hua Zhou (2026). Use the [CSV](results.csv) for the six-setting results and the [evaluation guide](evaluation.md) for metric inputs and scoring details.
+These are aggregate results from [*InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning*](https://arxiv.org/abs/2611.32918) by Xiaofeng Shi, Qian Kou, and Hua Zhou (2026). Use the [CSV](results.csv) for the six-setting results and the [evaluation guide](evaluation.md) for metric inputs and scoring details.
 
 ## Main comparison
 

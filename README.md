@@ -2,7 +2,7 @@
 
 **Add domain knowledge to an instruction-tuned model while retaining its general assistant behavior.**
 
-[**Project homepage**](https://xiaofengshi.github.io/InstructReplay/) · [**Try the metrics**](https://xiaofengshi.github.io/InstructReplay/try/) · [**Train on your data**](docs/training.md) · [**Download a release**](#verify-a-release)
+[**Paper (arXiv:2611.32918)**](https://arxiv.org/abs/2611.32918) · [**Project homepage**](https://xiaofengshi.github.io/InstructReplay/) · [**Try the metrics**](https://xiaofengshi.github.io/InstructReplay/try/) · [**Train on your data**](docs/training.md) · [**Download a release**](#verify-a-release)
 
 [![CPU checks](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml)
 [![Apache-2.0 license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -78,6 +78,18 @@ On macOS, use `shasum -a 256 --check instructreplay-v0.1.1.zip.sha256` for the c
 
 ## Citation and license
 
-Xiaofeng Shi, Qian Kou, and Hua Zhou, Beijing Academy of Artificial Intelligence (BAAI). *InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning* (2026). [Citation metadata](CITATION.cff)
+Xiaofeng Shi, Qian Kou, and Hua Zhou, Beijing Academy of Artificial Intelligence (BAAI). *InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning*. 2026. [arXiv:2611.32918](https://arxiv.org/abs/2611.32918) · [Citation metadata](CITATION.cff)
+
+```bibtex
+@misc{shi2026instructreplay,
+  title         = {{InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning}},
+  author        = {Shi, Xiaofeng and Kou, Qian and Zhou, Hua},
+  year          = {2026},
+  eprint        = {2611.32918},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2611.32918}
+}
+```
 
 [Apache License 2.0](LICENSE) · [Attribution notices](NOTICE) · [Project homepage](https://xiaofengshi.github.io/InstructReplay/)

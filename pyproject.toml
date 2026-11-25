@@ -15,6 +15,7 @@ train = ["deepspeed==0.14.3"]
 dev = ["pytest>=8", "ruff>=0.6", "build>=1"]
 
 [project.urls]
+Paper = "https://arxiv.org/abs/2611.32918"
 Homepage = "https://xiaofengshi.github.io/InstructReplay/"
 Repository = "https://github.com/xiaofengShi/InstructReplay"
 Issues = "https://github.com/xiaofengShi/InstructReplay/issues"

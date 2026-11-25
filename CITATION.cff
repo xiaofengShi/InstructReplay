@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "Please cite InstructReplay when using this software."
+message: "Please cite the InstructReplay preprint when using this software."
 type: software
 title: "InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning"
 version: 0.1.1
@@ -16,3 +16,18 @@ authors:
     given-names: Hua
     affiliation: "Beijing Academy of Artificial Intelligence (BAAI)"
 license: Apache-2.0
+preferred-citation:
+  type: unpublished
+  title: "InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning"
+  authors:
+    - family-names: Shi
+      given-names: Xiaofeng
+    - family-names: Kou
+      given-names: Qian
+    - family-names: Zhou
+      given-names: Hua
+  year: 2026
+  identifiers:
+    - type: other
+      value: "arXiv:2611.32918"
+  url: "https://arxiv.org/abs/2611.32918"

@@ -6,6 +6,8 @@ import { Chip } from "@/components/base/badges/chip";
 
 const github = "https://github.com/xiaofengShi/InstructReplay";
 const project = "https://xiaofengshi.github.io/InstructReplay/";
+const paperId = "2611.32918";
+const paperUrl = `https://arxiv.org/abs/${paperId}`;
 const title = "InstructReplay · Factual fine-tuning with assistant-turn replay";
 const description = "Keep general assistant behavior during factual fine-tuning. Compare six InstructReplay experiments, try the evaluation math, and get a versioned Python implementation.";
 const socialDescription = "Across six settings, mean general forgetting fell from 28.07 to 2.44 percentage points while factual acquisition stayed comparable.";
@@ -59,7 +61,8 @@ function Hero() {
             <h1>Learn new facts.<br /><span>Keep the assistant.</span></h1>
             <p className="intro">InstructReplay reuses the initial model’s own assistant turns during factual fine-tuning to preserve how it responds.</p>
             <div className="actions">
-              <ButtonLink href="#results" trailingIcon={RiArrowDownLine}>Explore the results</ButtonLink>
+              <ButtonLink href={paperUrl} trailingIcon={RiExternalLinkLine}>Read the paper</ButtonLink>
+              <ButtonLink href="#results" variant="secondary" trailingIcon={RiArrowDownLine}>Explore the results</ButtonLink>
               <ButtonLink href="try/" variant="secondary" trailingIcon={RiArrowRightLine}>Try the metrics</ButtonLink>
             </div>
             <p className="byline">Xiaofeng Shi, Qian Kou, and Hua Zhou<span>Beijing Academy of Artificial Intelligence (BAAI)</span></p>
@@ -281,6 +284,7 @@ export function render(styles: string, csv: string) {
             <h2>Citation</h2>
             <p>Xiaofeng Shi, Qian Kou, and Hua Zhou. <cite>InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning.</cite> 2026.</p>
             <div className="footer-links">
+              <LinkButton href={paperUrl} trailingIcon={RiExternalLinkLine}>arXiv:{paperId}</LinkButton>
               <LinkButton href={`${github}/blob/main/CITATION.cff`}>Citation metadata</LinkButton>
               <LinkButton href={`${github}/blob/main/LICENSE`}>Apache-2.0 software license</LinkButton>
             </div>
