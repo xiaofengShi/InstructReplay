@@ -14,7 +14,12 @@
   "configs/train.json",
   "configs/zero2.json",
   "docs/.nojekyll",
+  "docs/assets/badge-arxiv.png",
+  "docs/assets/badge-demo.png",
+  "docs/assets/badge-project.png",
   "docs/assets/home.mjs",
+  "docs/assets/readme-results-mobile.png",
+  "docs/assets/readme-results.png",
   "docs/assets/result-card.png",
   "docs/evaluation.md",
   "docs/index.html",
@@ -35,6 +40,7 @@
   "site/components/base/buttons/link-button.tsx",
   "site/package-lock.json",
   "site/package.json",
+  "site/src/arxiv-icon.tsx",
   "site/src/home.tsx",
   "site/styles/home.css",
   "site/styles/theme.css",
@@ -57,5 +63,6 @@
   "tests/test_metrics.py",
   "tests/test_packaging.py",
   "tests/test_trainer.py",
-  "tools/package.py"
+  "tools/package.py",
+  "tools/render_result_cards.py"
 ]

@@ -1,17 +1,23 @@
 # InstructReplay
 
-**Add domain knowledge to an instruction-tuned model while retaining its general assistant behavior.**
+**Learn new facts. Keep the assistant.** InstructReplay preserves general assistant behavior during factual fine-tuning by replaying the initial model’s own replies.
 
-[**Paper (arXiv:2611.32918)**](https://arxiv.org/abs/2611.32918) · [**Project homepage**](https://xiaofengshi.github.io/InstructReplay/) · [**Try the metrics**](https://xiaofengshi.github.io/InstructReplay/try/) · [**Train on your data**](docs/training.md) · [**Download a release**](#verify-a-release)
-
-[![CPU checks](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml)
-[![Apache-2.0 license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
-
-InstructReplay saves the initial model’s own assistant replies to general instructions. During factual fine-tuning, domain answers use cross-entropy and saved replies use forward KL from the frozen initial model. The same replay buffer can be reused for another domain on that checkpoint.
-
-<p align="center">
-  <img alt="Across six settings, mean forgetting was 28.07 versus 2.44 percentage points and mean factual acquisition was 15.23 versus 15.49 points." src="docs/assets/result-card.png" width="100%">
+<p>
+  <a href="https://arxiv.org/abs/2611.32918"><img src="docs/assets/badge-arxiv.png" width="156" height="32" alt="Read the paper on arXiv (2611.32918)"></a>
+  <a href="https://xiaofengshi.github.io/InstructReplay/"><img src="docs/assets/badge-project.png" width="124" height="32" alt="Project page"></a>
+  <a href="https://xiaofengshi.github.io/InstructReplay/try/"><img src="docs/assets/badge-demo.png" width="132" height="32" alt="Metrics demo"></a>
 </p>
+
+<p>
+  <a href="https://xiaofengshi.github.io/InstructReplay/#results">
+    <picture>
+      <source media="(max-width: 620px)" srcset="docs/assets/readme-results-mobile.png">
+      <img src="docs/assets/readme-results.png" alt="Explore the six study settings. Mean general forgetting falls from 28.07 to 2.44 percentage points, and domain acquisition is 15.23 versus 15.49 points with Naive SFT and InstructReplay, respectively." width="1200">
+    </picture>
+  </a>
+</p>
+
+During training, domain answers use cross-entropy and saved replies use forward KL from the frozen initial model. The same replay buffer can be reused for another domain on that checkpoint.
 
 ## Start here
 
@@ -19,6 +25,7 @@ InstructReplay saves the initial model’s own assistant replies to general inst
 | --- | --- |
 | Inspect the reported experiments | [Explore all six settings](https://xiaofengshi.github.io/InstructReplay/#results), [download the results CSV](docs/results.csv), and [read the control comparisons](docs/results.md#replay-controls). |
 | Check the evaluation math | [Open the playground](https://xiaofengshi.github.io/InstructReplay/try/) or [run the CPU example](#run-the-metrics-example). Both use the same synthetic scores. |
+| Use a pinned release | [Download and verify the source archive](#verify-a-release). |
 | Adapt a model | [Generate replay and fine-tune](docs/training.md) on a GPU execution host using a local checkpoint and licensed data. |
 | Report a run or help improve the project | [Share a reproduction](https://github.com/xiaofengShi/InstructReplay/issues/new?template=reproduction.yml), [report a bug](https://github.com/xiaofengShi/InstructReplay/issues/new?template=bug.yml), or read [Contributing](CONTRIBUTING.md). |
 
@@ -48,6 +55,8 @@ cat metrics.json
 Expected values in percentage points are **A = 12.5**, **F = 3**, **W = 5**, and **S = 9.5**. The output path must be new. The CLI takes already-scored inputs. [See the score format and benchmark protocol.](docs/evaluation.md)
 
 ## Run training and tests
+
+[![CPU checks](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/xiaofengShi/InstructReplay/actions/workflows/tests.yml)
 
 1. Supply a local instruction-tuned checkpoint, licensed domain QA and general instructions.
 2. [Generate replies once and train on paired examples](docs/training.md). The study used a 1:1 replay ratio and KL weight 0.25.

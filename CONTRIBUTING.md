@@ -27,6 +27,8 @@ python -m http.server 8000 --directory docs
 
 Commit the generated HTML alongside its source changes. CI rebuilds it from the lockfile and checks for drift. The vendored BoardUI components and tokens come from the [public registry](https://www.boardui.com/getting-started) under the [MIT license](site/LICENSE.boardui).
 
+The README and social result cards can be regenerated with `python tools/render_result_cards.py` in an environment with Matplotlib. The script uses the published aggregate means in [the results guide](docs/results.md).
+
 ## Publish a source release
 
 Maintainers keep the Python project, module and citation versions in sync. Push an annotated `vX.Y.Z` tag with the release notes. The release workflow checks the tag, packages the public allowlist and publishes the source ZIP and checksum. If publication fails before a release exists, rerun the failed job or run **Publish source release** from Actions with the existing tag.

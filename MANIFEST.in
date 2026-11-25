@@ -1,7 +1,8 @@
 include CITATION.cff NOTICE publish-files.json
 recursive-include configs *.json
 recursive-include docs *.md
-include docs/results.csv docs/assets/result-card.png
+include docs/results.csv
+recursive-include docs/assets *.png
 include CONTRIBUTING.md docs/try/example.json
 recursive-include tools *.py
 recursive-include tests *.py

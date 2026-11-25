@@ -1,8 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { RiArrowDownLine, RiArrowRightLine, RiExternalLinkLine, RiGithubFill, RiLoopRightLine } from "@remixicon/react";
+import { RiArrowDownLine, RiArrowRightLine, RiBarChartLine, RiExternalLinkLine, RiGithubFill, RiLoopRightLine } from "@remixicon/react";
 import { Button, ButtonLink } from "@/components/base/buttons/button";
 import { LinkButton } from "@/components/base/buttons/link-button";
 import { Chip } from "@/components/base/badges/chip";
+import { ArxivIcon } from "@/src/arxiv-icon";
 
 const github = "https://github.com/xiaofengShi/InstructReplay";
 const project = "https://xiaofengshi.github.io/InstructReplay/";
@@ -61,15 +62,15 @@ function Hero() {
             <h1>Learn new facts.<br /><span>Keep the assistant.</span></h1>
             <p className="intro">InstructReplay reuses the initial model’s own assistant turns during factual fine-tuning to preserve how it responds.</p>
             <div className="actions">
-              <ButtonLink href={paperUrl} trailingIcon={RiExternalLinkLine}>Read the paper</ButtonLink>
+              <ButtonLink href={paperUrl} leadingIcon={ArxivIcon}>Paper on arXiv</ButtonLink>
               <ButtonLink href="#results" variant="secondary" trailingIcon={RiArrowDownLine}>Explore the results</ButtonLink>
-              <ButtonLink href="try/" variant="secondary" trailingIcon={RiArrowRightLine}>Try the metrics</ButtonLink>
+              <ButtonLink href="try/" variant="secondary" leadingIcon={RiBarChartLine}>Try the metrics</ButtonLink>
             </div>
             <p className="byline">Xiaofeng Shi, Qian Kou, and Hua Zhou<span>Beijing Academy of Artificial Intelligence (BAAI)</span></p>
           </div>
-          <figure className="scoreboard dark" aria-labelledby="scoreboard-title">
+          <figure className="scoreboard" aria-labelledby="scoreboard-title">
             <div className="panel-header">
-              <h2 id="scoreboard-title" className="text-title-2-medium">Acquisition and forgetting</h2>
+              <h2 id="scoreboard-title" className="text-title-2-medium">Main results</h2>
               <p>Mean across six settings · percentage points</p>
             </div>
             <div className="comparison">
@@ -79,10 +80,10 @@ function Hero() {
             </div>
             <div className="comparison">
               <h3>Domain acquisition <span>↑ higher is better</span></h3>
-              <Bar label="Naive SFT" value="15.23" max={20} />
-              <Bar label="InstructReplay" value="15.49" max={20} replay />
+              <Bar label="Naive SFT" value="15.23" max={30} />
+              <Bar label="InstructReplay" value="15.49" max={30} replay />
             </div>
-            <figcaption>Bars share a scale within each metric.</figcaption>
+            <figcaption>Both comparisons use the same 0–30 pp scale.</figcaption>
           </figure>
         </div>
       </div>
@@ -263,6 +264,8 @@ export function render(styles: string, csv: string) {
         <meta property="og:description" content={socialDescription} />
         <meta property="og:url" content={project} />
         <meta property="og:image" content={`${project}assets/result-card.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="Mean forgetting 28.07 versus 2.44 points. Mean acquisition 15.23 versus 15.49 points." />
         <meta name="twitter:card" content="summary_large_image" />
         <title>{title}</title>
@@ -284,7 +287,7 @@ export function render(styles: string, csv: string) {
             <h2>Citation</h2>
             <p>Xiaofeng Shi, Qian Kou, and Hua Zhou. <cite>InstructReplay: Replaying Assistant Turns to Preserve General Behavior During Factual Fine-Tuning.</cite> 2026.</p>
             <div className="footer-links">
-              <LinkButton href={paperUrl} trailingIcon={RiExternalLinkLine}>arXiv:{paperId}</LinkButton>
+              <LinkButton href={paperUrl} leadingIcon={ArxivIcon}>arXiv:{paperId}</LinkButton>
               <LinkButton href={`${github}/blob/main/CITATION.cff`}>Citation metadata</LinkButton>
               <LinkButton href={`${github}/blob/main/LICENSE`}>Apache-2.0 software license</LinkButton>
             </div>
